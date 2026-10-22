@@ -7,7 +7,9 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'src'
 use App\Config\Config;
 use App\Exception\DuplicadoException;
 use App\Exception\EstudianteNoEncontradoException;
+use App\Exception\MotivoVacioException;
 use App\Exception\TipoAjusteInvalidoException;
+use App\Exception\TransicionInvalidaException;
 use App\Exception\ValidacionException;
 use App\Model\Estado;
 use App\Repository\Conexion;
@@ -192,6 +194,182 @@ probar('Rechaza una solicitud para estudiante inexistente', static function () u
     esperarExcepcion(EstudianteNoEncontradoException::class, static fn () =>
         $solicitudService->registrar('99999999', 'Programación I', 'TIEMPO_ADICIONAL')
     );
+});
+
+probar('Rechaza una transición inválida y conserva el estado', static function () use (
+    $solicitudService
+): void {
+    $solicitud = $solicitudService->registrar(
+        '70000001',
+        'Transición inválida',
+        'AULA_ACCESIBLE'
+    );
+    esperarExcepcion(TransicionInvalidaException::class, static fn () =>
+        $solicitudService->cambiarEstado($solicitud->idSolicitud, Estado::APROBADA)
+    );
+    $actual = $solicitudService->buscarPorId($solicitud->idSolicitud);
+    verificar($actual?->estado === Estado::RECIBIDA, 'El estado cambió tras una transición inválida.');
+});
+
+probar('Un estado final rechazado no cambia ante otra transición inválida', static function () use (
+    $solicitudService
+): void {
+    $solicitud = $solicitudService->registrar(
+        '70000001',
+        'Estado final sin cambios',
+        'AULA_ACCESIBLE'
+    );
+    $solicitudService->cambiarEstado($solicitud->idSolicitud, Estado::EVALUADA);
+    $solicitudService->cambiarEstado(
+        $solicitud->idSolicitud,
+        Estado::RECHAZADA,
+        'Motivo válido de rechazo'
+    );
+
+    esperarExcepcion(TransicionInvalidaException::class, static fn () =>
+        $solicitudService->cambiarEstado($solicitud->idSolicitud, Estado::IMPLEMENTADA)
+    );
+    verificar(
+        $solicitudService->buscarPorId($solicitud->idSolicitud)?->estado === Estado::RECHAZADA,
+        'El estado final RECHAZADA cambió tras una transición inválida.'
+    );
+});
+
+probar('Permite transiciones RECIBIDA a EVALUADA a APROBADA a IMPLEMENTADA', static function () use (
+    $solicitudService
+): void {
+    $solicitud = $solicitudService->registrar(
+        '70000001',
+        'Transición válida',
+        'MATERIAL_ACCESIBLE'
+    );
+    $solicitud = $solicitudService->cambiarEstado($solicitud->idSolicitud, Estado::EVALUADA);
+    verificar($solicitud->estado === Estado::EVALUADA, 'No pasó a EVALUADA.');
+    $solicitud = $solicitudService->cambiarEstado($solicitud->idSolicitud, Estado::APROBADA);
+    verificar($solicitud->estado === Estado::APROBADA, 'No pasó a APROBADA.');
+    $solicitud = $solicitudService->cambiarEstado($solicitud->idSolicitud, Estado::IMPLEMENTADA);
+    verificar($solicitud->estado === Estado::IMPLEMENTADA, 'No pasó a IMPLEMENTADA.');
+});
+
+probar('Valida motivo de rechazo tras recortarlo', static function () use (
+    $solicitudService
+): void {
+    $crearEvaluada = static function (string $asignatura) use ($solicitudService) {
+        $solicitud = $solicitudService->registrar(
+            '70000001',
+            $asignatura,
+            'AULA_ACCESIBLE'
+        );
+        return $solicitudService->cambiarEstado($solicitud->idSolicitud, Estado::EVALUADA);
+    };
+
+    $motivoNueve = $crearEvaluada('Motivo de 9 caracteres');
+    esperarExcepcion(MotivoVacioException::class, static fn () =>
+        $solicitudService->cambiarEstado(
+            $motivoNueve->idSolicitud,
+            Estado::RECHAZADA,
+            str_repeat('x', 9)
+        )
+    );
+    verificar(
+        $solicitudService->buscarPorId($motivoNueve->idSolicitud)?->estado === Estado::EVALUADA,
+        'El estado cambió tras rechazar un motivo de 9 caracteres.'
+    );
+
+    $motivoDiez = $crearEvaluada('Motivo de 10 caracteres');
+    $rechazoDiez = $solicitudService->cambiarEstado(
+        $motivoDiez->idSolicitud,
+        Estado::RECHAZADA,
+        '  ' . str_repeat('x', 10) . '  '
+    );
+    verificar($rechazoDiez->motivoRechazo === str_repeat('x', 10), 'No se recortó el motivo de 10 caracteres.');
+
+    $motivoQuinientos = $crearEvaluada('Motivo de 500 caracteres');
+    $rechazoQuinientos = $solicitudService->cambiarEstado(
+        $motivoQuinientos->idSolicitud,
+        Estado::RECHAZADA,
+        str_repeat('y', 500)
+    );
+    verificar(
+        strlen((string) $rechazoQuinientos->motivoRechazo) === 500,
+        'No se aceptó el motivo de 500 caracteres.'
+    );
+
+    $motivoQuinientosUno = $crearEvaluada('Motivo de 501 caracteres');
+    esperarExcepcion(MotivoVacioException::class, static fn () =>
+        $solicitudService->cambiarEstado(
+            $motivoQuinientosUno->idSolicitud,
+            Estado::RECHAZADA,
+            str_repeat('z', 501)
+        )
+    );
+    verificar(
+        $solicitudService->buscarPorId($motivoQuinientosUno->idSolicitud)?->estado
+            === Estado::EVALUADA,
+        'El estado cambió tras rechazar un motivo de 501 caracteres.'
+    );
+
+    $motivoEspacios = $crearEvaluada('Motivo solo espacios');
+    esperarExcepcion(MotivoVacioException::class, static fn () =>
+        $solicitudService->cambiarEstado(
+            $motivoEspacios->idSolicitud,
+            Estado::RECHAZADA,
+            '          '
+        )
+    );
+    verificar(
+        $solicitudService->buscarPorId($motivoEspacios->idSolicitud)?->estado
+            === Estado::EVALUADA,
+        'El estado cambió tras rechazar un motivo compuesto solo por espacios.'
+    );
+});
+
+probar('Filtra pendientes por documento exacto o nombre parcial', static function () use (
+    $solicitudService
+): void {
+    $porDocumento = $solicitudService->filtrarPorEstudiante('70000001');
+    verificar($porDocumento !== [], 'No se encontró el documento exacto del estudiante.');
+    foreach ($porDocumento as $solicitud) {
+        verificar(
+            $solicitud->documentoEstudiante === '70000001',
+            'El filtro por documento devolvió otro documento.'
+        );
+        verificar(
+            $solicitud->nombreEstudiante === 'Estudiante Prueba Uno',
+            'El nombre del estudiante no se cargó en el listado.'
+        );
+    }
+
+    $porNombre = $solicitudService->filtrarPorEstudiante('Prueba Uno');
+    verificar($porNombre !== [], 'No se encontró el nombre parcial del estudiante.');
+    verificar(
+        $solicitudService->filtrarPorEstudiante('Estudiante inexistente') === [],
+        'Un filtro sin coincidencias debía devolver una lista vacía.'
+    );
+});
+
+probar('Filtra por asignatura y excluye estados no pendientes', static function () use (
+    $solicitudService
+): void {
+    $solicitud = $solicitudService->registrar(
+        '70000001',
+        'Asignatura de filtro pendiente',
+        'INTERPRETE_LSP'
+    );
+    $resultado = $solicitudService->filtrarPorAsignatura('filtro pendiente');
+    verificar(count($resultado) === 1, 'El filtro de asignatura no coincidió exactamente con la prueba.');
+    verificar(
+        $resultado[0]->idSolicitud === $solicitud->idSolicitud,
+        'El filtro por asignatura devolvió una solicitud incorrecta.'
+    );
+
+    $pendientes = $solicitudService->listarPendientes();
+    foreach ($pendientes as $pendiente) {
+        verificar(
+            $pendiente->estado->esPendiente(),
+            'El listado incluyó una solicitud RECHAZADA o IMPLEMENTADA.'
+        );
+    }
 });
 
 echo PHP_EOL . '--- Resumen ---' . PHP_EOL;

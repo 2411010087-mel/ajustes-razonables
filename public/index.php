@@ -9,7 +9,6 @@ use App\Repository\Conexion;
 use App\Repository\EstudianteRepositoryPdo;
 use App\Repository\SolicitudRepositoryPdo;
 use App\Repository\TipoAjusteRepositoryPdo;
-use App\Security\Escape;
 use App\Service\EstudianteService;
 use App\Service\SolicitudService;
 
@@ -63,6 +62,35 @@ try {
         $estudianteController->registrar();
     } elseif ($ruta === 'solicitudes/registrar') {
         $solicitudController->registrar();
+    } elseif ($ruta === 'solicitudes/pendientes') {
+        if ($metodo !== 'GET') {
+            http_response_code(405);
+            header('Allow: GET');
+            $tituloPagina = 'Método no permitido';
+            $mensaje = 'El listado de solicitudes solo admite peticiones GET.';
+            require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views'
+                . DIRECTORY_SEPARATOR . 'errores' . DIRECTORY_SEPARATOR . 'error.php';
+        } else {
+            $solicitudController->listarPendientes();
+        }
+    } elseif ($ruta === 'solicitudes/cambiar-estado') {
+        if ($metodo === 'POST') {
+            $solicitudController->cambiarEstado();
+        } else {
+            $idRecibido = $_GET['id'] ?? null;
+            $idSolicitud = is_string($idRecibido)
+                ? filter_var($idRecibido, FILTER_VALIDATE_INT)
+                : false;
+            if (!is_int($idSolicitud) || $idSolicitud < 1) {
+                http_response_code(400);
+                $tituloPagina = 'Solicitud inválida';
+                $mensaje = 'El identificador de solicitud no es válido.';
+                require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views'
+                    . DIRECTORY_SEPARATOR . 'errores' . DIRECTORY_SEPARATOR . 'error.php';
+            } else {
+                $solicitudController->mostrarCambioEstado($idSolicitud);
+            }
+        }
     } else {
         http_response_code(404);
         $tituloPagina = 'Página no encontrada';

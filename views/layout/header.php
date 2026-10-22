@@ -40,6 +40,7 @@ use App\Security\Escape;
     <nav aria-label="Navegación principal">
         <a href="?ruta=estudiantes/registrar">Registrar estudiante</a>
         <a href="?ruta=solicitudes/registrar">Registrar solicitud</a>
+        <a href="?ruta=solicitudes/pendientes">Solicitudes pendientes</a>
     </nav>
 </header>
 <main>

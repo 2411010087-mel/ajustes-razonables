@@ -46,9 +46,11 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
         $sentencia = $this->pdo->prepare(
             'SELECT s.id_solicitud, s.documento_estudiante, s.id_tipo_ajuste,
                     t.nombre AS tipo_ajuste, s.asignatura, s.estado,
-                    s.motivo_rechazo, s.created_at, s.updated_at
+                    s.motivo_rechazo, s.created_at, s.updated_at,
+                    e.nombre AS nombre_estudiante
              FROM solicitud s
              INNER JOIN tipo_ajuste t ON t.id_tipo_ajuste = s.id_tipo_ajuste
+             INNER JOIN estudiante e ON e.documento = s.documento_estudiante
              WHERE s.id_solicitud = :id_solicitud'
         );
         $sentencia->execute(['id_solicitud' => $idSolicitud]);
@@ -99,9 +101,9 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
     {
         return $this->consultarSolicitudes(
             "s.estado NOT IN ('IMPLEMENTADA', 'RECHAZADA')
-             AND (e.documento LIKE :documento OR e.nombre LIKE :nombre)",
+             AND (e.documento = :documento OR e.nombre LIKE :nombre)",
             [
-                'documento' => '%' . $criterio . '%',
+                'documento' => $criterio,
                 'nombre' => '%' . $criterio . '%',
             ]
         );
@@ -181,7 +183,8 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
         $sentencia = $this->pdo->prepare(
             'SELECT s.id_solicitud, s.documento_estudiante, s.id_tipo_ajuste,
                     t.nombre AS tipo_ajuste, s.asignatura, s.estado,
-                    s.motivo_rechazo, s.created_at, s.updated_at
+                    s.motivo_rechazo, s.created_at, s.updated_at,
+                    e.nombre AS nombre_estudiante
              FROM solicitud s
              INNER JOIN tipo_ajuste t ON t.id_tipo_ajuste = s.id_tipo_ajuste
              INNER JOIN estudiante e ON e.documento = s.documento_estudiante
@@ -214,7 +217,8 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
             Estado::from((string) $fila['estado']),
             $fila['motivo_rechazo'] === null ? null : (string) $fila['motivo_rechazo'],
             (string) $fila['created_at'],
-            (string) $fila['updated_at']
+            (string) $fila['updated_at'],
+            isset($fila['nombre_estudiante']) ? (string) $fila['nombre_estudiante'] : null
         );
     }
 }

@@ -20,7 +20,8 @@ final class Solicitud
         public Estado $estado,
         public ?string $motivoRechazo,
         public readonly ?string $createdAt,
-        public readonly ?string $updatedAt
+        public readonly ?string $updatedAt,
+        public readonly ?string $nombreEstudiante = null
     ) {
     }
 }
