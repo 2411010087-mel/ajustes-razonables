@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use App\Config\Config;
 use App\Controller\EstudianteController;
+use App\Controller\ReporteController;
 use App\Controller\SolicitudController;
 use App\Exception\ConfiguracionException;
 use App\Repository\Conexion;
@@ -10,6 +11,7 @@ use App\Repository\EstudianteRepositoryPdo;
 use App\Repository\SolicitudRepositoryPdo;
 use App\Repository\TipoAjusteRepositoryPdo;
 use App\Service\EstudianteService;
+use App\Service\ReporteService;
 use App\Service\SolicitudService;
 
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'src'
@@ -42,6 +44,7 @@ try {
             $tipoAjusteRepository
         )
     );
+    $reporteController = new ReporteController(new ReporteService($solicitudRepository));
 
     $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     if (!in_array($metodo, ['GET', 'POST'], true)) {
@@ -90,6 +93,17 @@ try {
             } else {
                 $solicitudController->mostrarCambioEstado($idSolicitud);
             }
+        }
+    } elseif ($ruta === 'reportes/totales') {
+        if ($metodo !== 'GET') {
+            http_response_code(405);
+            header('Allow: GET');
+            $tituloPagina = 'Método no permitido';
+            $mensaje = 'El reporte de totales solo admite peticiones GET.';
+            require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views'
+                . DIRECTORY_SEPARATOR . 'errores' . DIRECTORY_SEPARATOR . 'error.php';
+        } else {
+            $reporteController->totales();
         }
     } else {
         http_response_code(404);

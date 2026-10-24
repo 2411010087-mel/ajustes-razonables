@@ -17,6 +17,7 @@ use App\Repository\EstudianteRepositoryPdo;
 use App\Repository\SolicitudRepositoryPdo;
 use App\Repository\TipoAjusteRepositoryPdo;
 use App\Service\EstudianteService;
+use App\Service\ReporteService;
 use App\Service\SolicitudService;
 
 /**
@@ -95,6 +96,7 @@ $solicitudService = new SolicitudService(
     $estudianteRepository,
     $tipoAjusteRepository
 );
+$reporteService = new ReporteService($solicitudRepository);
 
 probar('Registra un estudiante válido', static function () use ($estudianteService): void {
     $estudiante = $estudianteService->registrar(
@@ -382,6 +384,71 @@ probar('Filtra por asignatura y excluye estados no pendientes', static function 
             'El listado incluyó una solicitud RECHAZADA o IMPLEMENTADA.'
         );
     }
+});
+
+probar('El reporte cuenta totales conocidos por tipo, estado y total general', static function () use (
+    $reporteService,
+    $solicitudService
+): void {
+    $tiposAntes = $reporteService->totalesPorTipoAjuste();
+    $estadosAntes = $reporteService->totalesPorEstado();
+    $totalAntes = $reporteService->totalSolicitudes();
+
+    $solicitudRecibida = $solicitudService->registrar(
+        '70000001',
+        'Reporte conocido uno',
+        'TIEMPO_ADICIONAL'
+    );
+    $solicitudAprobada = $solicitudService->registrar(
+        '70000001',
+        'Reporte conocido dos',
+        'TIEMPO_ADICIONAL'
+    );
+    $solicitudRechazada = $solicitudService->registrar(
+        '70000001',
+        'Reporte conocido tres',
+        'MATERIAL_ACCESIBLE'
+    );
+
+    $solicitudService->cambiarEstado($solicitudAprobada->idSolicitud, Estado::EVALUADA);
+    $solicitudService->cambiarEstado($solicitudAprobada->idSolicitud, Estado::APROBADA);
+    $solicitudService->cambiarEstado($solicitudRechazada->idSolicitud, Estado::EVALUADA);
+    $solicitudService->cambiarEstado(
+        $solicitudRechazada->idSolicitud,
+        Estado::RECHAZADA,
+        'Motivo de prueba para reporte'
+    );
+
+    $tiposDespues = $reporteService->totalesPorTipoAjuste();
+    $estadosDespues = $reporteService->totalesPorEstado();
+    verificar(
+        $tiposDespues['TIEMPO_ADICIONAL'] === $tiposAntes['TIEMPO_ADICIONAL'] + 2,
+        'El total por TIEMPO_ADICIONAL no aumentó en dos.'
+    );
+    verificar(
+        $tiposDespues['MATERIAL_ACCESIBLE'] === $tiposAntes['MATERIAL_ACCESIBLE'] + 1,
+        'El total por MATERIAL_ACCESIBLE no aumentó en uno.'
+    );
+    verificar(
+        $estadosDespues[Estado::RECIBIDA->value] === $estadosAntes[Estado::RECIBIDA->value] + 1,
+        'El total RECIBIDA no aumentó en uno.'
+    );
+    verificar(
+        $estadosDespues[Estado::APROBADA->value] === $estadosAntes[Estado::APROBADA->value] + 1,
+        'El total APROBADA no aumentó en uno.'
+    );
+    verificar(
+        $estadosDespues[Estado::RECHAZADA->value] === $estadosAntes[Estado::RECHAZADA->value] + 1,
+        'El total RECHAZADA no aumentó en uno.'
+    );
+    verificar(
+        $reporteService->totalSolicitudes() === $totalAntes + 3,
+        'El total general no aumentó en tres.'
+    );
+    verificar(
+        $solicitudRecibida->estado === Estado::RECIBIDA,
+        'La solicitud de referencia debía permanecer RECIBIDA.'
+    );
 });
 
 echo PHP_EOL . '--- Resumen ---' . PHP_EOL;

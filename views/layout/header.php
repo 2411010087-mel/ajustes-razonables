@@ -41,6 +41,7 @@ use App\Security\Escape;
         <a href="?ruta=estudiantes/registrar">Registrar estudiante</a>
         <a href="?ruta=solicitudes/registrar">Registrar solicitud</a>
         <a href="?ruta=solicitudes/pendientes">Solicitudes pendientes</a>
+        <a href="?ruta=reportes/totales">Reporte de totales</a>
     </nav>
 </header>
 <main>

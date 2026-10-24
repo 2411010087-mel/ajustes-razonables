@@ -87,7 +87,15 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
     public function listarPendientes(): array
     {
         return $this->consultarSolicitudes(
-            "s.estado NOT IN ('IMPLEMENTADA', 'RECHAZADA')",
+            "SELECT s.id_solicitud, s.documento_estudiante, s.id_tipo_ajuste,
+                    t.nombre AS tipo_ajuste, s.asignatura, s.estado,
+                    s.motivo_rechazo, s.created_at, s.updated_at,
+                    e.nombre AS nombre_estudiante
+             FROM solicitud s
+             INNER JOIN tipo_ajuste t ON t.id_tipo_ajuste = s.id_tipo_ajuste
+             INNER JOIN estudiante e ON e.documento = s.documento_estudiante
+             WHERE s.estado NOT IN ('IMPLEMENTADA', 'RECHAZADA')
+             ORDER BY s.created_at DESC, s.id_solicitud DESC",
             []
         );
     }
@@ -100,8 +108,16 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
     public function filtrarPorEstudiante(string $criterio): array
     {
         return $this->consultarSolicitudes(
-            "s.estado NOT IN ('IMPLEMENTADA', 'RECHAZADA')
-             AND (e.documento = :documento OR e.nombre LIKE :nombre)",
+            "SELECT s.id_solicitud, s.documento_estudiante, s.id_tipo_ajuste,
+                    t.nombre AS tipo_ajuste, s.asignatura, s.estado,
+                    s.motivo_rechazo, s.created_at, s.updated_at,
+                    e.nombre AS nombre_estudiante
+             FROM solicitud s
+             INNER JOIN tipo_ajuste t ON t.id_tipo_ajuste = s.id_tipo_ajuste
+             INNER JOIN estudiante e ON e.documento = s.documento_estudiante
+             WHERE s.estado NOT IN ('IMPLEMENTADA', 'RECHAZADA')
+               AND (e.documento = :documento OR e.nombre LIKE :nombre)
+             ORDER BY s.created_at DESC, s.id_solicitud DESC",
             [
                 'documento' => $criterio,
                 'nombre' => '%' . $criterio . '%',
@@ -117,8 +133,16 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
     public function filtrarPorAsignatura(string $asignatura): array
     {
         return $this->consultarSolicitudes(
-            "s.estado NOT IN ('IMPLEMENTADA', 'RECHAZADA')
-             AND s.asignatura LIKE :asignatura",
+            "SELECT s.id_solicitud, s.documento_estudiante, s.id_tipo_ajuste,
+                    t.nombre AS tipo_ajuste, s.asignatura, s.estado,
+                    s.motivo_rechazo, s.created_at, s.updated_at,
+                    e.nombre AS nombre_estudiante
+             FROM solicitud s
+             INNER JOIN tipo_ajuste t ON t.id_tipo_ajuste = s.id_tipo_ajuste
+             INNER JOIN estudiante e ON e.documento = s.documento_estudiante
+             WHERE s.estado NOT IN ('IMPLEMENTADA', 'RECHAZADA')
+               AND s.asignatura LIKE :asignatura
+             ORDER BY s.created_at DESC, s.id_solicitud DESC",
             ['asignatura' => '%' . $asignatura . '%']
         );
     }
@@ -135,12 +159,13 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
             $totales[$tipo->value] = 0;
         }
 
-        $sentencia = $this->pdo->query(
+        $sentencia = $this->pdo->prepare(
             'SELECT t.nombre, COUNT(s.id_solicitud) AS total
              FROM tipo_ajuste t
              LEFT JOIN solicitud s ON s.id_tipo_ajuste = t.id_tipo_ajuste
              GROUP BY t.id_tipo_ajuste, t.nombre'
         );
+        $sentencia->execute();
         foreach ($sentencia->fetchAll() as $fila) {
             $totales[(string) $fila['nombre']] = (int) $fila['total'];
         }
@@ -160,11 +185,12 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
             $totales[$estado->value] = 0;
         }
 
-        $sentencia = $this->pdo->query(
+        $sentencia = $this->pdo->prepare(
             'SELECT estado, COUNT(*) AS total
              FROM solicitud
              GROUP BY estado'
         );
+        $sentencia->execute();
         foreach ($sentencia->fetchAll() as $fila) {
             $totales[(string) $fila['estado']] = (int) $fila['total'];
         }
@@ -173,24 +199,25 @@ final class SolicitudRepositoryPdo implements SolicitudRepository
     }
 
     /**
+     * Cuenta todas las solicitudes registradas.
+     */
+    public function contarTotalSolicitudes(): int
+    {
+        $sentencia = $this->pdo->prepare('SELECT COUNT(*) FROM solicitud');
+        $sentencia->execute();
+
+        return (int) $sentencia->fetchColumn();
+    }
+
+    /**
      * Ejecuta una consulta de solicitudes pendientes con los parámetros preparados.
      *
      * @param array<string, string> $parametros Parámetros de búsqueda.
      * @return Solicitud[]
      */
-    private function consultarSolicitudes(string $condicion, array $parametros): array
+    private function consultarSolicitudes(string $consulta, array $parametros): array
     {
-        $sentencia = $this->pdo->prepare(
-            'SELECT s.id_solicitud, s.documento_estudiante, s.id_tipo_ajuste,
-                    t.nombre AS tipo_ajuste, s.asignatura, s.estado,
-                    s.motivo_rechazo, s.created_at, s.updated_at,
-                    e.nombre AS nombre_estudiante
-             FROM solicitud s
-             INNER JOIN tipo_ajuste t ON t.id_tipo_ajuste = s.id_tipo_ajuste
-             INNER JOIN estudiante e ON e.documento = s.documento_estudiante
-             WHERE ' . $condicion . '
-             ORDER BY s.created_at DESC, s.id_solicitud DESC'
-        );
+        $sentencia = $this->pdo->prepare($consulta);
         $sentencia->execute($parametros);
 
         $solicitudes = [];

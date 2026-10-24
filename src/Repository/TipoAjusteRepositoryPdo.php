@@ -47,9 +47,10 @@ final class TipoAjusteRepositoryPdo implements TipoAjusteRepository
      */
     public function listarTodos(): array
     {
-        $sentencia = $this->pdo->query(
+        $sentencia = $this->pdo->prepare(
             'SELECT nombre FROM tipo_ajuste ORDER BY id_tipo_ajuste'
         );
+        $sentencia->execute();
 
         return array_map(
             static fn (array $fila): TipoAjuste => TipoAjuste::from((string) $fila['nombre']),

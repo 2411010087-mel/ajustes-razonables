@@ -60,4 +60,9 @@ interface SolicitudRepository
      * @return array<string, int>
      */
     public function contarPorEstado(): array;
+
+    /**
+     * Cuenta todas las solicitudes registradas.
+     */
+    public function contarTotalSolicitudes(): int;
 }
