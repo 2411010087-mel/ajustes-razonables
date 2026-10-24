@@ -5,11 +5,13 @@ use App\Security\Escape;
 
 require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR . 'header.php';
 ?>
-<p><strong>Total general de solicitudes:</strong>
-    <?= Escape::html($totalSolicitudes) ?>
-</p>
+<section class="total-card" aria-label="Total general">
+    <h3>Total general de solicitudes</h3>
+    <p class="total-card__value"><?= Escape::html($totalSolicitudes) ?></p>
+</section>
 
-<table>
+<div class="report-tables">
+<table class="data-table">
     <caption>Total de solicitudes por tipo de ajuste</caption>
     <thead>
     <tr>
@@ -21,13 +23,13 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
     <?php foreach ($totalesPorTipoAjuste as $tipoAjuste => $total): ?>
         <tr>
             <td><?= Escape::html($tipoAjuste) ?></td>
-            <td><?= Escape::html($total) ?></td>
+            <td class="numeric"><?= Escape::html($total) ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>
 </table>
 
-<table>
+<table class="data-table">
     <caption>Total de solicitudes por estado</caption>
     <thead>
     <tr>
@@ -39,9 +41,10 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
     <?php foreach ($totalesPorEstado as $estado => $total): ?>
         <tr>
             <td><?= Escape::html($estado) ?></td>
-            <td><?= Escape::html($total) ?></td>
+            <td class="numeric"><?= Escape::html($total) ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>
 </table>
+</div>
 <?php require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR . 'footer.php'; ?>

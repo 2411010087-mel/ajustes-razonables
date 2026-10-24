@@ -6,7 +6,7 @@ use App\Security\Escape;
 require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR . 'header.php';
 ?>
 <?php if ($mensajeGeneral !== null): ?>
-    <p class="form-error" role="alert"><?= Escape::html($mensajeGeneral) ?></p>
+    <p class="form-error" role="alert"><strong>Error:</strong> <?= Escape::html($mensajeGeneral) ?></p>
 <?php endif; ?>
 
 <dl>
@@ -18,13 +18,13 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
     <dt>Tipo de ajuste</dt>
     <dd><?= Escape::html($solicitud->tipoAjuste->value) ?></dd>
     <dt>Estado actual</dt>
-    <dd><?= Escape::html($solicitud->estado->value) ?></dd>
+    <dd><span class="status-badge"><?= Escape::html($solicitud->estado->value) ?></span></dd>
 </dl>
 
 <?php if ($estadosPermitidos === []): ?>
-    <p>Esta solicitud ya alcanzó un estado final y no admite más cambios.</p>
+    <p class="notice" role="status">Estado final: esta solicitud ya no admite más cambios.</p>
 <?php else: ?>
-    <form method="post" action="?ruta=solicitudes/cambiar-estado">
+    <form class="form-card" method="post" action="?ruta=solicitudes/cambiar-estado">
         <input type="hidden" name="_csrf" value="<?= Escape::html($tokenCsrf) ?>">
         <input type="hidden" name="id_solicitud" value="<?= Escape::html($solicitud->idSolicitud) ?>">
 
@@ -58,7 +58,9 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
             </p>
         <?php endif; ?>
 
-        <button type="submit">Guardar cambio de estado</button>
+        <div class="form-actions">
+            <button class="button button--primary" type="submit">Guardar cambio de estado</button>
+        </div>
     </form>
 <?php endif; ?>
 <p><a href="?ruta=solicitudes/pendientes">Volver a solicitudes pendientes</a></p>

@@ -9,13 +9,13 @@ $errores = $errores ?? [];
 $datos = $datos ?? [];
 ?>
 <?php if ($mensajeExito !== null): ?>
-    <p class="notice" role="status"><?= Escape::html($mensajeExito) ?></p>
+    <p class="notice" role="status"><strong>Éxito:</strong> <?= Escape::html($mensajeExito) ?></p>
 <?php endif; ?>
 <?php if ($mensajeGeneral !== null): ?>
-    <p class="form-error" role="alert"><?= Escape::html($mensajeGeneral) ?></p>
+    <p class="form-error" role="alert"><strong>Error:</strong> <?= Escape::html($mensajeGeneral) ?></p>
 <?php endif; ?>
 
-<form method="post" action="?ruta=solicitudes/registrar">
+<form class="form-card" method="post" action="?ruta=solicitudes/registrar">
     <input type="hidden" name="_csrf" value="<?= Escape::html($tokenCsrf) ?>">
 
     <label for="documento_estudiante">Documento del estudiante (8 dígitos)</label>
@@ -58,6 +58,8 @@ $datos = $datos ?? [];
         <p class="field-error" id="tipo-ajuste-error"><?= Escape::html($errores['tipo_ajuste']) ?></p>
     <?php endif; ?>
 
-    <button type="submit">Registrar solicitud</button>
+    <div class="form-actions">
+        <button class="button button--primary" type="submit">Registrar solicitud</button>
+    </div>
 </form>
 <?php require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR . 'footer.php'; ?>
