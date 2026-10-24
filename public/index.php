@@ -17,6 +17,7 @@ use App\Service\SolicitudService;
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'src'
     . DIRECTORY_SEPARATOR . 'autoload.php';
 
+date_default_timezone_set('America/Lima');
 header('Content-Type: text/html; charset=UTF-8');
 
 if (session_status() !== PHP_SESSION_ACTIVE) {

@@ -4,6 +4,14 @@ declare(strict_types=1);
 use App\Security\Escape;
 
 require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR . 'header.php';
+$etiquetasTipoAjuste = [
+    'TIEMPO_ADICIONAL' => 'Tiempo adicional',
+    'MATERIAL_ACCESIBLE' => 'Material accesible',
+    'INTERPRETE_LSP' => 'Intérprete LSP',
+    'AULA_ACCESIBLE' => 'Aula accesible',
+    'MOBILIARIO' => 'Mobiliario',
+    'ACOMPANAMIENTO' => 'Acompañamiento',
+];
 ?>
 <?php if ($mensajeExito !== null): ?>
     <p class="notice" role="status"><strong>Éxito:</strong> <?= Escape::html($mensajeExito) ?></p>
@@ -59,7 +67,7 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
                 <td><?= Escape::html($solicitud->documentoEstudiante) ?></td>
                 <td><?= Escape::html($solicitud->nombreEstudiante ?? '') ?></td>
                 <td><?= Escape::html($solicitud->asignatura) ?></td>
-                <td><?= Escape::html(ucfirst(strtolower(str_replace('_', ' ', $solicitud->tipoAjuste->value)))) ?></td>
+                <td><?= Escape::html($etiquetasTipoAjuste[$solicitud->tipoAjuste->value]) ?></td>
                 <td>
                     <span class="status-badge status-badge--<?= Escape::html(strtolower($solicitud->estado->value)) ?>">
                         <?= Escape::html(ucfirst(strtolower($solicitud->estado->value))) ?>

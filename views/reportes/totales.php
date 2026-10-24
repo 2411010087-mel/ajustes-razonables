@@ -4,6 +4,14 @@ declare(strict_types=1);
 use App\Security\Escape;
 
 require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR . 'header.php';
+$etiquetasTipoAjuste = [
+    'TIEMPO_ADICIONAL' => 'Tiempo adicional',
+    'MATERIAL_ACCESIBLE' => 'Material accesible',
+    'INTERPRETE_LSP' => 'Intérprete LSP',
+    'AULA_ACCESIBLE' => 'Aula accesible',
+    'MOBILIARIO' => 'Mobiliario',
+    'ACOMPANAMIENTO' => 'Acompañamiento',
+];
 ?>
 <section class="total-card" aria-label="Total general">
     <h3>Total general de solicitudes</h3>
@@ -35,7 +43,7 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
     <?php foreach ($totalesPorTipoAjuste as $tipoAjuste => $total): ?>
         <?php $porcentaje = $totalSolicitudes > 0 ? ($total / $totalSolicitudes) * 100 : 0.0; ?>
         <tr>
-            <td><?= Escape::html(ucfirst(strtolower(str_replace('_', ' ', $tipoAjuste)))) ?></td>
+            <td><?= Escape::html($etiquetasTipoAjuste[$tipoAjuste]) ?></td>
             <td class="numeric"><?= Escape::html($total) ?></td>
             <td>
                 <div class="proportion" aria-label="<?= Escape::html(number_format($porcentaje, 1)) ?> por ciento">

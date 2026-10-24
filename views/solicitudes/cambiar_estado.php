@@ -4,6 +4,14 @@ declare(strict_types=1);
 use App\Security\Escape;
 
 require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR . 'header.php';
+$etiquetasTipoAjuste = [
+    'TIEMPO_ADICIONAL' => 'Tiempo adicional',
+    'MATERIAL_ACCESIBLE' => 'Material accesible',
+    'INTERPRETE_LSP' => 'Intérprete LSP',
+    'AULA_ACCESIBLE' => 'Aula accesible',
+    'MOBILIARIO' => 'Mobiliario',
+    'ACOMPANAMIENTO' => 'Acompañamiento',
+];
 ?>
 <?php if ($mensajeGeneral !== null): ?>
     <p class="form-error" role="alert"><strong>Error:</strong> <?= Escape::html($mensajeGeneral) ?></p>
@@ -16,7 +24,7 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
     <dt>Asignatura</dt>
     <dd><?= Escape::html($solicitud->asignatura) ?></dd>
     <dt>Tipo de ajuste</dt>
-    <dd><?= Escape::html($solicitud->tipoAjuste->value) ?></dd>
+    <dd><?= Escape::html($etiquetasTipoAjuste[$solicitud->tipoAjuste->value]) ?></dd>
     <dt>Estado actual</dt>
     <dd><span class="status-badge status-badge--<?= Escape::html(strtolower($solicitud->estado->value)) ?>">
         <?= Escape::html(ucfirst(strtolower($solicitud->estado->value))) ?>
