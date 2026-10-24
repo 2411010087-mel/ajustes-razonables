@@ -312,6 +312,8 @@ CREATE TABLE solicitud (
     updated_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
                                       ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id_solicitud),
+    KEY idx_solicitud_estado_created_at (estado, created_at),
+    KEY idx_solicitud_asignatura (asignatura),
     FOREIGN KEY (documento_estudiante) REFERENCES estudiante(documento)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (id_tipo_ajuste) REFERENCES tipo_ajuste(id_tipo_ajuste)
@@ -327,6 +329,19 @@ CREATE TABLE solicitud (
 INSERT INTO tipo_ajuste (nombre) VALUES
     ('TIEMPO_ADICIONAL'), ('MATERIAL_ACCESIBLE'), ('INTERPRETE_LSP'),
     ('AULA_ACCESIBLE'), ('MOBILIARIO'), ('ACOMPANAMIENTO');
+
+INSERT INTO estudiante (
+    documento, nombre, carrera, tipo_discapacidad,
+    tipo_documento_acreditacion, numero_documento_acreditacion
+) VALUES
+    ('70000001', 'Estudiante Prueba Uno', 'Ingeniería de Sistemas',
+     'VISUAL', 'CONADIS', 'CONADIS-00001'),
+    ('70000002', 'Estudiante Prueba Dos', 'Administración',
+     'AUDITIVA', 'CONADIS', 'CONADIS-00002'),
+    ('70000003', 'Estudiante Prueba Tres', 'Agronomía',
+     'FISICA', 'CERT-MED', 'CERT-MED-00003'),
+    ('70000004', 'Estudiante Prueba Cuatro', 'Contabilidad',
+     'INTELECTUAL', 'CONADIS', 'CONADIS-00004');
 ```
 
 Las pruebas usan una base distinta (`ajustes_test`) definida en `.env`, y recrean el esquema en cada ejecución.

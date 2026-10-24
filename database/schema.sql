@@ -32,6 +32,8 @@ CREATE TABLE solicitud (
     updated_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
                                       ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id_solicitud),
+    KEY idx_solicitud_estado_created_at (estado, created_at),
+    KEY idx_solicitud_asignatura (asignatura),
     FOREIGN KEY (documento_estudiante) REFERENCES estudiante(documento)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (id_tipo_ajuste) REFERENCES tipo_ajuste(id_tipo_ajuste)

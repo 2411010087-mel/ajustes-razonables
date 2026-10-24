@@ -444,12 +444,34 @@ td.numeric,
 
 .proportion__bar::before {
     display: block;
-    width: min(100%, var(--proporcion));
+    width: 0;
     height: 100%;
     border-radius: inherit;
     background: #244c67;
     content: "";
 }
+
+.proportion__bar--0::before { width: 0; }
+.proportion__bar--5::before { width: 5%; }
+.proportion__bar--10::before { width: 10%; }
+.proportion__bar--15::before { width: 15%; }
+.proportion__bar--20::before { width: 20%; }
+.proportion__bar--25::before { width: 25%; }
+.proportion__bar--30::before { width: 30%; }
+.proportion__bar--35::before { width: 35%; }
+.proportion__bar--40::before { width: 40%; }
+.proportion__bar--45::before { width: 45%; }
+.proportion__bar--50::before { width: 50%; }
+.proportion__bar--55::before { width: 55%; }
+.proportion__bar--60::before { width: 60%; }
+.proportion__bar--65::before { width: 65%; }
+.proportion__bar--70::before { width: 70%; }
+.proportion__bar--75::before { width: 75%; }
+.proportion__bar--80::before { width: 80%; }
+.proportion__bar--85::before { width: 85%; }
+.proportion__bar--90::before { width: 90%; }
+.proportion__bar--95::before { width: 95%; }
+.proportion__bar--100::before { width: 100%; }
 
 .proportion__value {
     flex: 0 0 3.5rem;

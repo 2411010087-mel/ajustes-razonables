@@ -47,8 +47,8 @@ $etiquetasTipoAjuste = [
             <td class="numeric"><?= Escape::html($total) ?></td>
             <td>
                 <div class="proportion" aria-label="<?= Escape::html(number_format($porcentaje, 1)) ?> por ciento">
-                    <span class="proportion__bar" aria-hidden="true"
-                          style="--proporcion: <?= Escape::html(number_format($porcentaje, 2, '.', '')) ?>%"></span>
+                    <span class="proportion__bar proportion__bar--<?= (int) (round($porcentaje / 5) * 5) ?>"
+                          aria-hidden="true"></span>
                     <span class="proportion__value"><?= Escape::html(number_format($porcentaje, 1)) ?>%</span>
                 </div>
             </td>
@@ -78,8 +78,8 @@ $etiquetasTipoAjuste = [
             <td class="numeric"><?= Escape::html($total) ?></td>
             <td>
                 <div class="proportion" aria-label="<?= Escape::html(number_format($porcentaje, 1)) ?> por ciento">
-                    <span class="proportion__bar" aria-hidden="true"
-                          style="--proporcion: <?= Escape::html(number_format($porcentaje, 2, '.', '')) ?>%"></span>
+                    <span class="proportion__bar proportion__bar--<?= (int) (round($porcentaje / 5) * 5) ?>"
+                          aria-hidden="true"></span>
                     <span class="proportion__value"><?= Escape::html(number_format($porcentaje, 1)) ?>%</span>
                 </div>
             </td>

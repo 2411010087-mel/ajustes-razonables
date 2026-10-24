@@ -16,6 +16,7 @@ use App\Repository\Conexion;
 use App\Repository\EstudianteRepositoryPdo;
 use App\Repository\SolicitudRepositoryPdo;
 use App\Repository\TipoAjusteRepositoryPdo;
+use App\Security\RegistroErrores;
 use App\Service\EstudianteService;
 use App\Service\ReporteService;
 use App\Service\SolicitudService;
@@ -98,27 +99,74 @@ $solicitudService = new SolicitudService(
 );
 $reporteService = new ReporteService($solicitudRepository);
 
+probar('Carga los cuatro estudiantes definidos en los datos semilla', static function () use (
+    $estudianteRepository
+): void {
+    foreach ([
+        '70000001' => 'Estudiante Prueba Uno',
+        '70000002' => 'Estudiante Prueba Dos',
+        '70000003' => 'Estudiante Prueba Tres',
+        '70000004' => 'Estudiante Prueba Cuatro',
+    ] as $documento => $nombre) {
+        $estudiante = $estudianteRepository->buscarPorDocumento((string) $documento);
+        verificar($estudiante?->nombre === $nombre, 'Falta el estudiante semilla ' . $documento . '.');
+    }
+});
+
 probar('Registra un estudiante válido', static function () use ($estudianteService): void {
     $estudiante = $estudianteService->registrar(
-        '70000001',
-        'Estudiante Prueba Uno',
+        '70000005',
+        'Estudiante de Registro',
         'Ingeniería de Sistemas',
         'VISUAL',
         'CONADIS',
-        'CONADIS-00001'
+        'CONADIS-00005'
     );
-    verificar($estudiante->documento === '70000001', 'El documento registrado no coincide.');
+    verificar($estudiante->documento === '70000005', 'El documento registrado no coincide.');
 });
 
 probar('Rechaza un documento duplicado', static function () use ($estudianteService): void {
     esperarExcepcion(DuplicadoException::class, static fn () => $estudianteService->registrar(
-        '70000001',
-        'Estudiante Prueba Uno',
+        '70000005',
+        'Estudiante de Registro',
         'Ingeniería de Sistemas',
         'VISUAL',
         'CONADIS',
-        'CONADIS-00001'
+        'CONADIS-00005'
     ));
+});
+
+probar('Registra errores técnicos sin incluir datos ingresados en el mensaje', static function (): void {
+    $rutaLog = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'ajustes-razonables-test-'
+        . bin2hex(random_bytes(8)) . '.log';
+    $postOriginal = $_POST;
+    $_POST['documento'] = '79999999';
+    $_POST['nombre'] = 'Nombre confidencial';
+
+    try {
+        (new RegistroErrores($rutaLog))->registrar(
+            new RuntimeException('Error PDO para 79999999: Nombre confidencial')
+        );
+        $lineas = file($rutaLog, FILE_IGNORE_NEW_LINES);
+        verificar(is_array($lineas) && count($lineas) === 1, 'El registro no contiene una línea JSON.');
+        $entrada = json_decode($lineas[0], true);
+        verificar(is_array($entrada), 'La entrada del registro no es JSON válido.');
+        verificar(
+            array_keys($entrada) === ['fecha', 'tipo', 'mensaje', 'archivo', 'linea'],
+            'El registro contiene campos no permitidos.'
+        );
+        verificar(
+            !str_contains($entrada['mensaje'], '79999999')
+                && !str_contains($entrada['mensaje'], 'Nombre confidencial'),
+            'El registro conserva datos enviados por el usuario.'
+        );
+        verificar($entrada['tipo'] === RuntimeException::class, 'El tipo de excepción no coincide.');
+    } finally {
+        $_POST = $postOriginal;
+        if (is_file($rutaLog)) {
+            unlink($rutaLog);
+        }
+    }
 });
 
 probar('Rechaza un documento que no tiene ocho dígitos', static function () use (

@@ -10,6 +10,7 @@ use App\Repository\Conexion;
 use App\Repository\EstudianteRepositoryPdo;
 use App\Repository\SolicitudRepositoryPdo;
 use App\Repository\TipoAjusteRepositoryPdo;
+use App\Security\RegistroErrores;
 use App\Service\EstudianteService;
 use App\Service\ReporteService;
 use App\Service\SolicitudService;
@@ -19,17 +20,37 @@ require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'src'
 
 date_default_timezone_set('America/Lima');
 header('Content-Type: text/html; charset=UTF-8');
+header(
+    "Content-Security-Policy: default-src 'self'; img-src 'self' data:; "
+    . "style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; "
+    . "form-action 'self'; frame-ancestors 'none'"
+);
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: same-origin');
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_set_cookie_params([
-        'httponly' => true,
-        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-        'samesite' => 'Lax',
-    ]);
-    session_start();
-}
+$registradorErrores = new RegistroErrores(
+    dirname(__DIR__) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR
+        . 'logs' . DIRECTORY_SEPARATOR . 'app.log'
+);
 
 try {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        $nombreCookieSesion = session_name();
+        $sesionNueva = !isset($_COOKIE[$nombreCookieSesion])
+            || !is_string($_COOKIE[$nombreCookieSesion])
+            || $_COOKIE[$nombreCookieSesion] === '';
+        session_set_cookie_params([
+            'httponly' => true,
+            'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'samesite' => 'Strict',
+        ]);
+        session_start();
+        if ($sesionNueva && !session_regenerate_id(true)) {
+            throw new RuntimeException('No se pudo regenerar el identificador de sesión.');
+        }
+    }
+
     $configuracion = Config::cargar();
     $pdo = Conexion::obtener($configuracion);
     $estudianteRepository = new EstudianteRepositoryPdo($pdo);
@@ -114,14 +135,14 @@ try {
             . DIRECTORY_SEPARATOR . 'errores' . DIRECTORY_SEPARATOR . 'error.php';
     }
 } catch (ConfiguracionException $e) {
-    error_log($e->getMessage());
+    $registradorErrores->registrar($e);
     http_response_code(500);
     $tituloPagina = 'Error de configuración';
     $mensaje = 'No se pudo iniciar el sistema. Revise la configuración .env.';
     require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views'
         . DIRECTORY_SEPARATOR . 'errores' . DIRECTORY_SEPARATOR . 'error.php';
 } catch (Throwable $e) {
-    error_log((string) $e);
+    $registradorErrores->registrar($e);
     http_response_code(500);
     $tituloPagina = 'Error interno';
     $mensaje = 'Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.';
