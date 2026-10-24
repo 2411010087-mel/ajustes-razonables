@@ -322,6 +322,18 @@ probar('Valida motivo de rechazo tras recortarlo', static function () use (
             === Estado::EVALUADA,
         'El estado cambió tras rechazar un motivo compuesto solo por espacios.'
     );
+
+    $motivoAusente = $crearEvaluada('Motivo omitido');
+    esperarExcepcion(MotivoVacioException::class, static fn () =>
+        $solicitudService->cambiarEstado(
+            $motivoAusente->idSolicitud,
+            Estado::RECHAZADA
+        )
+    );
+    verificar(
+        $solicitudService->buscarPorId($motivoAusente->idSolicitud)?->estado === Estado::EVALUADA,
+        'El estado cambió tras rechazar sin proporcionar un motivo.'
+    );
 });
 
 probar('Filtra pendientes por documento exacto o nombre parcial', static function () use (
