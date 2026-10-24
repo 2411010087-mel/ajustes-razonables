@@ -8,8 +8,9 @@ use App\Security\Escape;
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= Escape::html($tituloPagina ?? 'Ajustes razonables') ?></title>
+    <title><?= Escape::html(($tituloPagina ?? 'Ajustes razonables') . ' · Ajustes razonables') ?></title>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23123047'/%3E%3Cpath d='M32 10v44M10 32h44' stroke='white' stroke-width='8'/%3E%3C/svg%3E" type="image/svg+xml">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Saltar al contenido</a>

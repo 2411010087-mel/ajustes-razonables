@@ -34,9 +34,12 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
 <p><a href="?ruta=solicitudes/pendientes">Mostrar todas las solicitudes pendientes</a></p>
 
 <?php if ($solicitudes === []): ?>
-    <p class="notice" role="status">
-        <strong>Información:</strong> No hay solicitudes pendientes para el filtro aplicado.
-    </p>
+    <section class="empty-state notice" role="status">
+        <h3>No encontramos solicitudes pendientes</h3>
+        <p>Prueba con otro criterio o vuelve al listado completo.</p>
+        <p><a href="?ruta=solicitudes/pendientes">Ver todas las solicitudes pendientes</a></p>
+        <p><a href="?ruta=solicitudes/registrar">Registrar una solicitud</a></p>
+    </section>
 <?php else: ?>
     <table>
         <caption>Solicitudes pendientes</caption>
@@ -56,8 +59,12 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'layout' . DIRECTORY_SEPARATOR 
                 <td><?= Escape::html($solicitud->documentoEstudiante) ?></td>
                 <td><?= Escape::html($solicitud->nombreEstudiante ?? '') ?></td>
                 <td><?= Escape::html($solicitud->asignatura) ?></td>
-                <td><?= Escape::html($solicitud->tipoAjuste->value) ?></td>
-                <td><span class="status-badge"><?= Escape::html($solicitud->estado->value) ?></span></td>
+                <td><?= Escape::html(ucfirst(strtolower(str_replace('_', ' ', $solicitud->tipoAjuste->value)))) ?></td>
+                <td>
+                    <span class="status-badge status-badge--<?= Escape::html(strtolower($solicitud->estado->value)) ?>">
+                        <?= Escape::html(ucfirst(strtolower($solicitud->estado->value))) ?>
+                    </span>
+                </td>
                 <td>
                     <?php if ($solicitud->idSolicitud !== null): ?>
                         <a href="?ruta=solicitudes/cambiar-estado&amp;id=<?= Escape::html($solicitud->idSolicitud) ?>">
