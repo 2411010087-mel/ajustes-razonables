@@ -1,0 +1,7 @@
+<FilesMatch "^\.env(?:\.example)?$">
+    Require all denied
+</FilesMatch>
+
+<If "%{REQUEST_URI} =~ m#/(?:[.]git|src|views|database|storage|tests|docs)(?:/|$)# || %{REQUEST_URI} =~ m#[.](?:md|sql|log)$#">
+    Require all denied
+</If>

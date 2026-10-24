@@ -68,6 +68,19 @@ function probar(string $nombre, callable $operacion): void
 
 $correctas = 0;
 $fallidas = 0;
+
+probar('Protege archivos sensibles mediante .htaccess', static function (): void {
+    $rutaHtaccess = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.htaccess';
+    verificar(is_file($rutaHtaccess), 'No existe el .htaccess de la raíz.');
+    $reglas = file_get_contents($rutaHtaccess);
+    verificar($reglas !== false, 'No se pudo leer el .htaccess de la raíz.');
+    verificar(
+        str_contains($reglas, '<FilesMatch "^\\.env(?:\\.example)?$">')
+            && str_contains($reglas, 'Require all denied'),
+        'El .htaccess no deniega explícitamente el acceso a .env.'
+    );
+});
+
 $configuracion = Config::cargar();
 $pdo = Conexion::obtener($configuracion, true);
 

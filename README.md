@@ -14,6 +14,10 @@ Stack: PHP 8.2+ (POO, sin frameworks), MySQL/MariaDB, PDO preparado.
 3. En phpMyAdmin crear las bases ajustes_razonables y ajustes_test (utf8mb4_unicode_ci).
 4. En ajustes_razonables importar database/schema.sql y luego database/seed.sql.
 
+En un servidor real, configura `public/` como raíz web (document root) para que los
+archivos de configuración, código fuente y documentación queden fuera del área pública.
+Las URLs de XAMPP indicadas abajo siguen usando `/ajustes-razonables/public/`.
+
 ## Uso
 - Registrar estudiante: http://localhost/ajustes-razonables/public/?ruta=estudiantes/registrar
 - Registrar solicitud: http://localhost/ajustes-razonables/public/?ruta=solicitudes/registrar
